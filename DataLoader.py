@@ -48,8 +48,8 @@ class DataLoaderWidget(QLabel):
             raise ValueError("choose 参数必须是 'single'、'multiple' 或 'directory'")
 
     def select_single_file(self) -> None:
-        """选择单个文件"""
-        self.file_path, _ = QFileDialog.getOpenFileName(self, "选择文件", "", "All Files (*)")
+        """选择单个文件, csv, excel"""
+        self.file_path, _ = QFileDialog.getOpenFileName(self, "选择文件", "", "CSV Files (*.csv);;Excel Files (*.xlsx *.xls)")
         if self.file_path:
             self.pathLineEdit.setText(self.file_path)
 

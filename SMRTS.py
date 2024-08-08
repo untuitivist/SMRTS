@@ -82,6 +82,7 @@ class SMRTS(QWidget):
         self.loginWidget.registerButton.setStyleSheet("font-size: 20px; border: 2px solid gray; border-radius: 5px; padding: 12px;")
         self.loginWidget.loginButton.setStyleSheet("font-size: 20px; border: 2px solid gray; border-radius: 5px; padding: 12px;")
 
+
         # 布局
         containerWidget = QWidget(self)
         containerLayout = QVBoxLayout(containerWidget)
@@ -197,6 +198,10 @@ class SMRTS(QWidget):
         self.HSIP_curve_sample.showButton.setStyleSheet(SW_StyleSheet_showbutton)
         self.HSIP_curve_sample.showButton.setText("确认")
 
+        self.HSIP_correction_sample.setMaximumHeight(80)
+        self.HSIP_threshold_sample.setMaximumHeight(80)
+        self.HSIP_curve_sample.setMaximumHeight(80)
+
         # 设置布局
         fromLayout = QHBoxLayout()
         dataloaderLayout = QVBoxLayout()
@@ -220,7 +225,6 @@ class SMRTS(QWidget):
         rightLayout.addWidget(HSIP_curve_sample)
         rightLayout.addWidget(HSIP_curve)
         
-
         fromLayout.addLayout(leftLayout, 1)  # 1 表示左侧布局占据 1 份空间
         fromLayout.addLayout(rightLayout, 1)  # 1 表示右侧布局占据 1 份空间
 
@@ -255,85 +259,65 @@ class SMRTS(QWidget):
         self.HSIP_curve.plotlyViewer.show_local(self.HSIP_curve_file)
 
     def HSIP_dataload(self):
-        # TODO: 实现数据列表加载功能
-        print("数据列表加载")
+        # TODO: 将数据加载到样本选择中
+        # print("高光谱图像处理: 数据列表加载")
         self.HSIP_dir_path = self.HSIP_dataloader.dir_path
         for file_name in os.listdir(self.HSIP_dir_path):
             self.HSIP_correction_sample.append_function(file_name, self.HSIP_correction_dataim)
             self.HSIP_threshold_sample.append_function(file_name, self.HSIP_threshold_dataim)
             self.HSIP_curve_sample.append_function(file_name, self.HSIP_curve_dataim)
     def HSIP_correction_dataim(self):
-        # TODO: 实现数据
+        # TODO: 保存选项的样本数据文件地址
         self.HSIP_correction_file = os.path.join(self.HSIP_dir_path, self.HSIP_correction_sample.comboBox.currentText())
     def HSIP_threshold_dataim(self):
-        # TODO: 实现数据
+        # TODO: 保存选项的样本数据文件地址
         self.HSIP_threshold_file = os.path.join(self.HSIP_dir_path, self.HSIP_threshold_sample.comboBox.currentText())
     def HSIP_curve_dataim(self):
-        # TODO: 实现数据
+        # TODO: 保存选项的样本数据文件地址
         self.HSIP_curve_file = os.path.join(self.HSIP_dir_path, self.HSIP_curve_sample.comboBox.currentText())
-
-
-
 
     @addTab_arg("传感器信号处理")
     def sensorSignalProcessing(self):
         # 创建控件: 数据加载器, 预处理方法选择, 信号可视化
         SSP_dataloader = DataLoaderWidget("数据加载器:", "directory")
         SSP_correction = SegmentationWidget("预处理方法选择:", ["S-G smoothing"], ifplotly=False)
-        SSP_threshold = SegmentationWidget("信号可视化:", ["sample1", "sample2", "sample3"])
-
-        # 功能设置
-        SSP_correction.append_function("S-G smoothing", self.SSP_SGsmoothing)
-        SSP_threshold.append_function("sample1", self.SSP_sample1)
-        SSP_threshold.append_function("sample2", self.SSP_sample2)
-        SSP_threshold.append_function("sample3", self.SSP_sample3)
-
+        SSP_threshold = SegmentationWidget("信号可视化:")
 
         # 获取控件
         self.SSP_dataloader = SSP_dataloader
-        self.SSP_dataloader_label = SSP_dataloader.label
-        self.SSP_dataloader_choosebutton = SSP_dataloader.chooseButton
-        self.SSP_dataloader_pathLineedit = SSP_dataloader.pathLineEdit
-
         self.SSP_correction = SSP_correction
-        self.SSP_correction_label = SSP_correction.label
-        self.SSP_correction_combobox = SSP_correction.comboBox
-        self.SSP_correction_showbutton = SSP_correction.showButton
-
         self.SSP_threshold = SSP_threshold
-        self.SSP_threshold_label = SSP_threshold.label
-        self.SSP_threshold_combobox = SSP_threshold.comboBox
-        self.SSP_threshold_showbutton = SSP_threshold.showButton
-        self.SSP_threshold_plotlywidgetbutton = SSP_threshold.plotlyWidgetButton
-        self.SSP_threshold_plotlyviewer = SSP_threshold.plotlyViewer
 
-        # 功能接入
+        # 功能设置
+        self.SSP_correction.append_function("S-G smoothing", self.SSP_SGsmoothing)
+        self.SSP_dataloader.pathLineEdit.textChanged.connect(self.SSP_dataload)
+        self.SSP_threshold.showButton.clicked.connect(self.SSP_imageDisplay)
 
         # 设置样式
         SW_StyleSheet_label = 'font-family: "Microsoft YaHei"; font-size: 30px; color: black;'
-        self.SSP_dataloader_label.setStyleSheet(SW_StyleSheet_label)
-        self.SSP_correction_label.setStyleSheet(SW_StyleSheet_label)
-        self.SSP_threshold_label.setStyleSheet(SW_StyleSheet_label)
+        self.SSP_dataloader.label.setStyleSheet(SW_StyleSheet_label)
+        self.SSP_correction.label.setStyleSheet(SW_StyleSheet_label)
+        self.SSP_threshold.label.setStyleSheet(SW_StyleSheet_label)
 
         SW_StyleSheet_combobox = 'font-family: "Microsoft YaHei"; font-size: 25px; color: black;'
-        self.SSP_dataloader_pathLineedit.setStyleSheet(SW_StyleSheet_combobox)
-        self.SSP_correction_combobox.setStyleSheet(SW_StyleSheet_combobox)
-        self.SSP_threshold_combobox.setStyleSheet(SW_StyleSheet_combobox)
+        self.SSP_dataloader.pathLineEdit.setStyleSheet(SW_StyleSheet_combobox)
+        self.SSP_correction.comboBox.setStyleSheet(SW_StyleSheet_combobox)
+        self.SSP_threshold.comboBox.setStyleSheet(SW_StyleSheet_combobox)
 
         SW_StyleSheet_showbutton = 'font-family: "Microsoft YaHei"; font-size: 25px; color: black; padding: 5px;'
-        self.SSP_dataloader_choosebutton.setStyleSheet(SW_StyleSheet_showbutton)
-        self.SSP_dataloader_choosebutton.setMinimumWidth(400)
-        self.SSP_dataloader_choosebutton.setMaximumWidth(400)
-        self.SSP_correction_showbutton.setStyleSheet(SW_StyleSheet_showbutton)
-        self.SSP_correction_showbutton.setMinimumWidth(400)
-        self.SSP_correction_showbutton.setMaximumWidth(400)
-        self.SSP_correction_showbutton.setText("确认")
-        self.SSP_threshold_showbutton.setStyleSheet(SW_StyleSheet_showbutton)
-        self.SSP_threshold_showbutton.setMinimumWidth(195)
-        self.SSP_threshold_showbutton.setMaximumWidth(195)
-        self.SSP_threshold_plotlywidgetbutton.setStyleSheet(SW_StyleSheet_showbutton)
-        self.SSP_threshold_plotlywidgetbutton.setMinimumWidth(195)
-        self.SSP_threshold_plotlywidgetbutton.setMaximumWidth(195)
+        self.SSP_dataloader.chooseButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.SSP_dataloader.chooseButton.setMinimumWidth(400)
+        self.SSP_dataloader.chooseButton.setMaximumWidth(400)
+        self.SSP_correction.showButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.SSP_correction.showButton.setMinimumWidth(400)
+        self.SSP_correction.showButton.setMaximumWidth(400)
+        self.SSP_correction.showButton.setText("确认")
+        self.SSP_threshold.showButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.SSP_threshold.showButton.setMinimumWidth(195)
+        self.SSP_threshold.showButton.setMaximumWidth(195)
+        self.SSP_threshold.plotlyWidgetButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.SSP_threshold.plotlyWidgetButton.setMinimumWidth(195)
+        self.SSP_threshold.plotlyWidgetButton.setMaximumWidth(195)
 
         # 设置布局
         fromLayout = QVBoxLayout()
@@ -357,15 +341,19 @@ class SMRTS(QWidget):
     def SSP_SGsmoothing(self):
         # TODO: 实现SGsmoothing功能
         pass
-    def SSP_sample1(self):
-        # TODO: 实现sample1功能
-        pass
-    def SSP_sample2(self):
-        # TODO: 实现sample2功能
-        pass
-    def SSP_sample3(self):
-        # TODO: 实现sample3功能
-        pass
+    def SSP_dataload(self):
+        # TODO: 实现dataload功能
+        print("传感器信号处理: 数据列表加载")
+        self.SSP_dir_path = self.SSP_dataloader.dir_path
+        for file_name in os.listdir(self.SSP_dir_path):
+            self.SSP_threshold.append_function(file_name, self.SSP_threshold_dataim)
+    def SSP_threshold_dataim(self):
+        # TODO: 实现threshold_dataim功能
+        self.SSP_threshold_file = os.path.join(self.SSP_dir_path, self.SSP_threshold.comboBox.currentText())
+    def SSP_imageDisplay(self):
+        # TODO: 实现imageDisplay功能
+        self.SSP_threshold.plotlyViewer.show_local(self.SSP_threshold_file)
+
 
     @addTab_arg("模型构建")
     def modelBuilding(self):
@@ -373,19 +361,19 @@ class SMRTS(QWidget):
         # 氧化程度定量模型: 标题, 高光谱数据加载, 氧化指标数据加载, 特征选择, 模型选择训练
         QMDO_title = QLabel("氧化程度定量模型", self)
         QMDO_dataloader_H = DataLoaderWidget("高光谱数据加载:", "directory")
-        QMDO_dataloader_O = DataLoaderWidget("氧化指标数据加载:", "directory")
+        QMDO_dataloader_O = DataLoaderWidget("氧化指标数据加载:", "single")
         QMDO_feature_selection = SegmentationWidget("特征选择:", ["2D-COS"])
         QMDO_model_selection = SegmentationWidget("模型选择:", ["3D-Mobilnet"], ifplotly=False)
         
         # 导电指数定量模型: 标题, 传感器信号数据加载, 导电指标数据加载, 模型选择训练
         QMCI_title = QLabel("导电指数定量模型", self)
         QMCI_dataloader_S = DataLoaderWidget("传感器信号数据加载:", "directory")
-        QMCI_dataloader_C = DataLoaderWidget("导电指标数据加载:", "directory")
+        QMCI_dataloader_C = DataLoaderWidget("导电指标数据加载:", "single")
         QMCI_model_selection = SegmentationWidget("模型选择:", ["MTCN-SA"], ifplotly=False)
 
         # 等级分类模型: 标题, 标签数据加载, 模型选择训练
         QMCL_title = QLabel("等级分类模型", self)
-        CMH_dataloader_L = DataLoaderWidget("标签数据加载:", "directory")
+        CMH_dataloader_L = DataLoaderWidget("标签数据加载:", "single")
         CMH_model_selection = SegmentationWidget("模型选择:", ["HFA-Net"], ifplotly=False)
 
         # 功能设置
@@ -519,8 +507,8 @@ class SMRTS(QWidget):
     @addTab_arg("检测结果输出")
     def resultOutput(self):
         # 创建控件: 数据加载器1, 数据加载器2, 数据可视化, 模型选择, 预测结果
-        RQ_dataloader_1 = DataLoaderWidget("待检测样本数据1加载:", "directory")
-        RQ_dataloader_2 = DataLoaderWidget("待检测样本数据2加载:", "directory")
+        RQ_dataloader_1 = DataLoaderWidget("待检测样本数据1加载:", "single")
+        RQ_dataloader_2 = DataLoaderWidget("待检测样本数据2加载:", "single")
         RQ_dataVisualization = SegmentationWidget("数据可视化:", ["光谱曲线", "传感器信号"])
         RQ_model_selection = SegmentationWidget("模型选择:", ["3D-Mobilnet", "MTCN-SA", "HFA-Net"], ifplotly=False)
         # 预测结果: 氧化程度, 导电指数, 分级
