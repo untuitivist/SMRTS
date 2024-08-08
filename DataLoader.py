@@ -49,21 +49,21 @@ class DataLoaderWidget(QLabel):
 
     def select_single_file(self) -> None:
         """选择单个文件"""
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择文件", "", "All Files (*)")
-        if file_path:
-            self.pathLineEdit.setText(file_path)
+        self.file_path, _ = QFileDialog.getOpenFileName(self, "选择文件", "", "All Files (*)")
+        if self.file_path:
+            self.pathLineEdit.setText(self.file_path)
 
     def select_multiple_files(self) -> None:
         """选择多个文件"""
-        file_paths, _ = QFileDialog.getOpenFileNames(self, "选择文件", "", "All Files (*)")
-        if file_paths:
-            self.pathLineEdit.setText('\n'.join(file_paths))  # 显示多个文件路径，每个路径换行
+        self.file_paths, _ = QFileDialog.getOpenFileNames(self, "选择文件", "", "All Files (*)")
+        if self.file_paths:
+            self.pathLineEdit.setText('\n'.join(self.file_paths))  # 显示多个文件路径，每个路径换行
 
     def select_single_directory(self) -> None:
         """选择单个目录"""
-        dir_path = QFileDialog.getExistingDirectory(self, "选择目录", "", QFileDialog.ShowDirsOnly)
-        if dir_path:
-            self.pathLineEdit.setText(dir_path)
+        self.dir_path = QFileDialog.getExistingDirectory(self, "选择目录", "", QFileDialog.ShowDirsOnly)
+        if self.dir_path:
+            self.pathLineEdit.setText(self.dir_path)
 
     def get_path(self) -> list:
         """

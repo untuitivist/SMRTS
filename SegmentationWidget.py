@@ -39,25 +39,30 @@ class PlotlyViewer(QtWebEngineWidgets.QWebEngineView):
         self.figure = fig  # 更新 figure
     
     def show_local(self, image_path: str):
-        # 读取本地图片并进行 base64 编码
-        with open(image_path, 'rb') as f:
-            image_data = f.read()
-            encoded_image = base64.b64encode(image_data).decode()
-
-        # 创建带有图片的图表
         fig = go.Figure()
+        if not os.path.exists(image_path):
+            fig.add_annotation(text=f"File not found: {image_path}", xref="paper", yref="paper", showarrow=False, font=dict(size=20))
+            self.set_figure(fig)
+        elif not image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            fig.add_annotation(text=f"Unsupported file format: {image_path}", xref="paper", yref="paper", showarrow=False, font=dict(size=20))
+            self.set_figure(fig)
+        else:
+            # 读取本地图片并进行 base64 编码
+            with open(image_path, 'rb') as f:
+                image_data = f.read()
+                encoded_image = base64.b64encode(image_data).decode()
 
-        fig.add_layout_image(
-            dict(
-                source='data:image/jpeg;base64,{}'.format(encoded_image),
-                xref='paper', yref='paper',
-                x=0.5, y=0.5,
-                sizex=1, sizey=1,
-                xanchor='center',
-                yanchor='middle'
+            fig.add_layout_image(
+                dict(
+                    source='data:image/jpeg;base64,{}'.format(encoded_image),
+                    xref='paper', yref='paper',
+                    x=0.5, y=0.5,
+                    sizex=1, sizey=1,
+                    xanchor='center',
+                    yanchor='middle'
+                )
             )
-        )
-        self.set_figure(fig)
+            self.set_figure(fig)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.temp_file.close()
@@ -155,7 +160,8 @@ class SegmentationWidget(QWidget):
         if item in self.functions_dict:
             self.functions_dict[item] = function
         else:
-            print(f"Item {item} not found in the list of options.")
+            self.comboBox.addItem(item)
+            self.functions_dict[item] = function
 
     def setStyles(self, label_style=None, comboBox_style=None, button_style=None, window_style=None):
         if label_style:

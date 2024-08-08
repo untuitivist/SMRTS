@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QListWidget, QStackedWidget, QHBoxLayout,QLabel, QVBoxLayout, QLineEdit, QMessageBox, QWidget
 
@@ -129,43 +130,54 @@ class SMRTS(QWidget):
         # 创建控件: 数据加载器, 高光谱矫正, 阈值分割, 光谱曲线显示
         HSIP_dataloader = DataLoaderWidget("数据加载:", "directory")
         HSIP_correction = SegmentationWidget("高光谱矫正:", ["黑白校正", "畸变校正"])
+        HSIP_correction_sample = SegmentationWidget("样本选择:", ifplotly=False)
         HSIP_threshold = SegmentationWidget("阈值分割:", ["Otsu", "二值分割"])
+        HSIP_threshold_sample = SegmentationWidget("样本选择:", ifplotly=False)
         HSIP_curve = SegmentationWidget("数据可视化:", ["图像显示", "光谱曲线显示"])
-        HSIP_curve_sample = SegmentationWidget("样本选择:", ["sample1", "sample2", "sample3"], ifplotly=False)
-
-        # 功能设置
-        HSIP_correction.append_function("黑白校正", self.HSIP_blackWhiteCorrection)
-        HSIP_correction.append_function("畸变校正", self.HSIP_distortionCorrection)
-        HSIP_threshold.append_function("Otsu", self.HSIP_otsuThresholding)
-        HSIP_threshold.append_function("二值分割", self.HSIP_binaryThresholding)
-        HSIP_curve.append_function("图像显示", self.HSIP_imageDisplay)
-        HSIP_curve.append_function("光谱曲线显示", self.HSIP_spectrumCurveDisplay)
-        HSIP_curve_sample.append_function("sample1", self.HSIP_sample1)
-        HSIP_curve_sample.append_function("sample2", self.HSIP_sample2)
-        HSIP_curve_sample.append_function("sample3", self.HSIP_sample3)
+        HSIP_curve_sample = SegmentationWidget("样本选择:", ifplotly=False)
 
         # 获取控件
         self.HSIP_dataloader = HSIP_dataloader
         self.HSIP_correction = HSIP_correction
+        self.HSIP_correction_sample = HSIP_correction_sample
         self.HSIP_threshold = HSIP_threshold
+        self.HSIP_threshold_sample = HSIP_threshold_sample
         self.HSIP_curve = HSIP_curve
         self.HSIP_curve_sample = HSIP_curve_sample
 
         # 功能接入
+        self.HSIP_dataloader.pathLineEdit.textChanged.connect(self.HSIP_dataload)
+
+        self.HSIP_correction_sample.showButton.clicked.connect(self.HSIP_correction_dataim)
+        self.HSIP_threshold_sample.showButton.clicked.connect(self.HSIP_threshold_dataim)
+        self.HSIP_curve_sample.showButton.clicked.connect(self.HSIP_curve_dataim)
+
+        self.HSIP_correction.append_function("黑白校正", self.HSIP_blackWhiteCorrection)
+        self.HSIP_correction.append_function("畸变校正", self.HSIP_distortionCorrection)
+
+        self.HSIP_threshold.append_function("Otsu", self.HSIP_otsuThresholding)
+        self.HSIP_threshold.append_function("二值分割", self.HSIP_binaryThresholding)
+
+        self.HSIP_curve.append_function("图像显示", self.HSIP_imageDisplay)
+        self.HSIP_curve.append_function("光谱曲线显示", self.HSIP_spectrumCurveDisplay)
 
         # 设置样式
 
         SW_StyleSheet_label = 'font-family: "Microsoft YaHei"; font-size: 30px; color: black;'
         self.HSIP_dataloader.label.setStyleSheet(SW_StyleSheet_label)
         self.HSIP_correction.label.setStyleSheet(SW_StyleSheet_label)
+        self.HSIP_correction_sample.label.setStyleSheet(SW_StyleSheet_label)
         self.HSIP_threshold.label.setStyleSheet(SW_StyleSheet_label)
+        self.HSIP_threshold_sample.label.setStyleSheet(SW_StyleSheet_label)
         self.HSIP_curve.label.setStyleSheet(SW_StyleSheet_label)
         self.HSIP_curve_sample.label.setStyleSheet(SW_StyleSheet_label)
 
         SW_StyleSheet_combobox = 'font-family: "Microsoft YaHei"; font-size: 25px; color: black;'
         self.HSIP_dataloader.pathLineEdit.setStyleSheet(SW_StyleSheet_combobox)
         self.HSIP_correction.comboBox.setStyleSheet(SW_StyleSheet_combobox)
+        self.HSIP_correction_sample.comboBox.setStyleSheet(SW_StyleSheet_combobox)
         self.HSIP_threshold.comboBox.setStyleSheet(SW_StyleSheet_combobox)
+        self.HSIP_threshold_sample.comboBox.setStyleSheet(SW_StyleSheet_combobox)
         self.HSIP_curve.comboBox.setStyleSheet(SW_StyleSheet_combobox)
         self.HSIP_curve_sample.comboBox.setStyleSheet(SW_StyleSheet_combobox)
 
@@ -174,8 +186,12 @@ class SMRTS(QWidget):
         self.HSIP_dataloader.chooseButton.setMinimumWidth(100)
         self.HSIP_correction.showButton.setStyleSheet(SW_StyleSheet_showbutton)
         self.HSIP_correction.plotlyWidgetButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.HSIP_correction_sample.showButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.HSIP_correction_sample.showButton.setText("确认")
         self.HSIP_threshold.showButton.setStyleSheet(SW_StyleSheet_showbutton)
         self.HSIP_threshold.plotlyWidgetButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.HSIP_threshold_sample.showButton.setStyleSheet(SW_StyleSheet_showbutton)
+        self.HSIP_threshold_sample.showButton.setText("确认")
         self.HSIP_curve.showButton.setStyleSheet(SW_StyleSheet_showbutton)
         self.HSIP_curve.plotlyWidgetButton.setStyleSheet(SW_StyleSheet_showbutton)
         self.HSIP_curve_sample.showButton.setStyleSheet(SW_StyleSheet_showbutton)
@@ -194,11 +210,12 @@ class SMRTS(QWidget):
         rightLayout.setSpacing(10)
 
         # 添加控件到布局, 设置伸缩因子
-        dataloaderLayout.addWidget(HSIP_dataloader)
-        leftLayout.addLayout(dataloaderLayout, 1)
-        
-        leftLayout.addWidget(HSIP_correction, 6)
+        dataloaderLayout.addWidget(HSIP_dataloader, 2)
+        leftLayout.addLayout(dataloaderLayout, 2)
+        leftLayout.addWidget(HSIP_correction_sample, 2)
+        leftLayout.addWidget(HSIP_correction, 13)
 
+        rightLayout.addWidget(HSIP_threshold_sample)
         rightLayout.addWidget(HSIP_threshold)
         rightLayout.addWidget(HSIP_curve_sample)
         rightLayout.addWidget(HSIP_curve)
@@ -215,39 +232,48 @@ class SMRTS(QWidget):
     # 功能函数
     def HSIP_blackWhiteCorrection(self):
         # TODO: 实现黑白校正功能
-        self.HSIP_correction.plotlyViewer.show_local(r"C:\Users\27243\Downloads\VSCode-Thick.png")
+        self.HSIP_correction.plotlyViewer.show_local(self.HSIP_correction_file)
 
     def HSIP_distortionCorrection(self):
         # TODO: 实现畸变校正功能
-        self.HSIP_correction.display_default_figure("畸变校正")
+        self.HSIP_correction.plotlyViewer.show_local(self.HSIP_correction_file)
 
     def HSIP_otsuThresholding(self):
         # TODO: 实现Otsu分割功能
-        self.HSIP_threshold.display_default_figure("Otsu分割")
+        self.HSIP_threshold.plotlyViewer.show_local(self.HSIP_threshold_file)
 
     def HSIP_binaryThresholding(self):
         # TODO: 实现二值分割功能
-        self.HSIP_threshold.display_default_figure("二值分割")
+        self.HSIP_threshold.plotlyViewer.show_local(self.HSIP_threshold_file)
 
     def HSIP_imageDisplay(self):
         # TODO: 实现图像显示功能
-        self.HSIP_curve.display_default_figure("图像显示")
+        self.HSIP_threshold.plotlyViewer.show_local(self.HSIP_threshold_file)
 
     def HSIP_spectrumCurveDisplay(self):
         # TODO: 实现数据可视化功能
-        self.HSIP_curve.display_default_figure("数据可视化")
+        self.HSIP_curve.plotlyViewer.show_local(self.HSIP_curve_file)
 
-    def HSIP_sample1(self):
-        # TODO: 实现样本1功能
-        self.HSIP_curve.display_default_figure("样本1")
+    def HSIP_dataload(self):
+        # TODO: 实现数据列表加载功能
+        print("数据列表加载")
+        self.HSIP_dir_path = self.HSIP_dataloader.dir_path
+        for file_name in os.listdir(self.HSIP_dir_path):
+            self.HSIP_correction_sample.append_function(file_name, self.HSIP_correction_dataim)
+            self.HSIP_threshold_sample.append_function(file_name, self.HSIP_threshold_dataim)
+            self.HSIP_curve_sample.append_function(file_name, self.HSIP_curve_dataim)
+    def HSIP_correction_dataim(self):
+        # TODO: 实现数据
+        self.HSIP_correction_file = os.path.join(self.HSIP_dir_path, self.HSIP_correction_sample.comboBox.currentText())
+    def HSIP_threshold_dataim(self):
+        # TODO: 实现数据
+        self.HSIP_threshold_file = os.path.join(self.HSIP_dir_path, self.HSIP_threshold_sample.comboBox.currentText())
+    def HSIP_curve_dataim(self):
+        # TODO: 实现数据
+        self.HSIP_curve_file = os.path.join(self.HSIP_dir_path, self.HSIP_curve_sample.comboBox.currentText())
 
-    def HSIP_sample2(self):
-        # TODO: 实现样本2功能
-        self.HSIP_curve.display_default_figure("样本2")
 
-    def HSIP_sample3(self):
-        # TODO: 实现样本3功能
-        self.HSIP_curve.display_default_figure("样本3")
+
 
     @addTab_arg("传感器信号处理")
     def sensorSignalProcessing(self):
