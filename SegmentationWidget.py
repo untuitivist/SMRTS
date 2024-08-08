@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+import base64
 from plotly.io import to_html
 import plotly.graph_objs as go
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
@@ -36,6 +37,27 @@ class PlotlyViewer(QtWebEngineWidgets.QWebEngineView):
         self.load(QtCore.QUrl.fromLocalFile(self.temp_file.name))
 
         self.figure = fig  # 更新 figure
+    
+    def show_local(self, image_path: str):
+        # 读取本地图片并进行 base64 编码
+        with open(image_path, 'rb') as f:
+            image_data = f.read()
+            encoded_image = base64.b64encode(image_data).decode()
+
+        # 创建带有图片的图表
+        fig = go.Figure()
+
+        fig.add_layout_image(
+            dict(
+                source='data:image/jpeg;base64,{}'.format(encoded_image),
+                xref='paper', yref='paper',
+                x=0.5, y=0.5,
+                sizex=1, sizey=1,
+                xanchor='center',
+                yanchor='middle'
+            )
+        )
+        self.set_figure(fig)
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.temp_file.close()

@@ -215,7 +215,7 @@ class SMRTS(QWidget):
     # 功能函数
     def HSIP_blackWhiteCorrection(self):
         # TODO: 实现黑白校正功能
-        self.HSIP_correction.display_default_figure("黑白校正")
+        self.HSIP_correction.plotlyViewer.show_local(r"C:\Users\27243\Downloads\VSCode-Thick.png")
 
     def HSIP_distortionCorrection(self):
         # TODO: 实现畸变校正功能
